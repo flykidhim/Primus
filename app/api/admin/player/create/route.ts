@@ -1,16 +1,57 @@
+// app/api/admin/player/create/route.ts
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isAdminRequest } from "@/lib/auth";
 
+/**
+ * Body: {
+ *   name: string;
+ *   position: 'GK'|'DF'|'MF'|'FW' | string;
+ *   number: number | string;
+ *   nationality?: string;
+ *   heightCm?: number | string;
+ *   bio?: string;
+ *   photoUrl?: string;
+ * }
+ */
 export async function POST(req: Request) {
-  const form = await req.formData();
-  const data: any = {};
-  for (const [k, v] of form.entries()) data[k] = String(v);
-  // Coerce numeric fields
-  Object.keys(data).forEach((k) => {
-    if (/^(number|heightCm|homeScore|awayScore|priceCents|stock)$/.test(k))
-      data[k] = Number(data[k] || 0);
-  });
-  if (data.date) data.date = new Date(data.date);
-  const created = await (prisma as any).player.create({ data });
-  return NextResponse.json(created);
+  try {
+    if (!(await isAdminRequest(req))) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const b = await req.json();
+    if (!b?.name || !b?.position || b?.number == null) {
+      return NextResponse.json(
+        { error: "Missing name/position/number" },
+        { status: 400 }
+      );
+    }
+
+    const created = await prisma.player.create({
+      data: {
+        name: String(b.name),
+        position: String(b.position),
+        number: Number(b.number),
+        nationality: b.nationality ? String(b.nationality) : null,
+        heightCm:
+          b.heightCm !== undefined && b.heightCm !== ""
+            ? Number(b.heightCm)
+            : null,
+        bio: b.bio ? String(b.bio) : null,
+        photoUrl: b.photoUrl ? String(b.photoUrl) : null,
+      },
+    });
+
+    return NextResponse.json({ player: created });
+  } catch (e: any) {
+    return NextResponse.json(
+      { error: "Create failed", message: e?.message ?? String(e) },
+      { status: 500 }
+    );
+  }
 }
