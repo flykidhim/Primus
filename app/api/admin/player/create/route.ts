@@ -8,15 +8,12 @@ import { prisma } from "@/lib/prisma";
 import { isAdminRequest } from "@/lib/auth";
 
 /**
- * Body: {
- *   name: string;
- *   position: 'GK'|'DF'|'MF'|'FW' | string;
- *   number: number | string;
- *   nationality?: string;
- *   heightCm?: number | string;
- *   bio?: string;
- *   photoUrl?: string;
+ * POST body: {
+ *   name: string; position: string; number: number | string;
+ *   nationality?: string; heightCm?: number | string;
+ *   bio?: string; photoUrl?: string;
  * }
+ * NOTE: You already have POST /api/admin/players. This is a legacy shim.
  */
 export async function POST(req: Request) {
   try {
@@ -24,7 +21,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const b = await req.json();
+    const b = await req.json().catch(() => ({}));
     if (!b?.name || !b?.position || b?.number == null) {
       return NextResponse.json(
         { error: "Missing name/position/number" },
