@@ -4,8 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-// Optional: if you added the cart island earlier
-import AddToCart from "@/components/cart/AddToCart";
 
 export async function generateMetadata({
   params,
@@ -84,43 +82,29 @@ export default async function ProductPage({
             <p className="text-white/85 leading-7">{product.description}</p>
           )}
 
-          <div className="text-xl font-bold text-brand-gold">{priceLabel}</div>
+          <div className="text-xl font-bold">{priceLabel}</div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* WhatsApp checkout (no onClick here) */}
+          <div className="flex items-center gap-3">
             {waHref ? (
-              <a
-                href={waHref}
-                className="btn-primary"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href={waHref} className="btn-primary">
                 Buy via WhatsApp
               </a>
             ) : (
-              <span
-                className="btn-outline cursor-not-allowed"
-                aria-disabled="true"
-                title="Set NEXT_PUBLIC_WHATSAPP_NUMBER in .env to enable WhatsApp checkout"
-              >
-                Buy via WhatsApp (disabled)
+              <span className="text-sm text-white/70">
+                Set{" "}
+                <code className="px-1 rounded bg-white/10">
+                  NEXT_PUBLIC_WHATSAPP_NUMBER
+                </code>{" "}
+                to enable WhatsApp checkout.
               </span>
             )}
-
-            {/* Optional: client cart island (safe to render in a Server page) */}
-            <AddToCart
-              id={product.id}
-              name={product.name}
-              priceCents={product.priceCents}
-              imageUrl={product.imageUrl}
-            />
+            {product.stock <= 0 && (
+              <span className="text-sm text-red-400">Out of stock</span>
+            )}
           </div>
 
           <div className="text-sm text-white/60">
             Stock: {product.stock ?? 0}
-            {product.stock <= 0 && (
-              <span className="text-red-400 ml-2">Out of stock</span>
-            )}
           </div>
         </div>
       </div>

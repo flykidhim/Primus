@@ -1,9 +1,8 @@
+// app/team/[id]/page.tsx
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPlayerById } from "@/lib/player-source";
-
-export const metadata = { title: "Player — Primus FC" };
+import { getPlayerById } from "@/lib/repos";
 
 export default async function PlayerPage({
   params,
@@ -20,71 +19,83 @@ export default async function PlayerPage({
         ← Back to squad
       </Link>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-3">
-          <div className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 bg-white/5">
-            {p.photoUrl ? (
-              <Image
-                src={p.photoUrl}
-                alt={p.name}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="grid place-items-center h-full text-white/50">
-                No image
-              </div>
-            )}
-            <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/60 text-xs">
-              #{p.number}
+      <div className="grid gap-6 md:grid-cols-[360px,1fr]">
+        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+          {p.photoUrl ? (
+            <Image
+              src={p.photoUrl}
+              alt={p.name}
+              fill
+              sizes="(max-width:768px) 100vw, 360px"
+              className="object-cover"
+            />
+          ) : (
+            <div className="grid place-items-center h-full text-white/50">
+              No image
             </div>
-          </div>
-
-          {p.photos?.length ? (
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-              {p.photos.map((ph) => (
-                <div
-                  key={ph.id}
-                  className="relative aspect-[4/3] rounded-xl overflow-hidden border border-white/10"
-                >
-                  <Image
-                    src={ph.url}
-                    alt={ph.alt ?? p.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          ) : null}
+          )}
         </div>
 
-        <div className="space-y-4">
-          <header className="space-y-1">
-            <h1 className="text-3xl font-extrabold">{p.name}</h1>
-            <div className="text-white/80">
-              {p.position} • {p.nationality ?? "—"}{" "}
-              {p.heightCm ? `• ${p.heightCm} cm` : ""}
-            </div>
-          </header>
+        <div className="space-y-3">
+          <h1 className="text-3xl font-extrabold">
+            <span className="text-brand-gold">#{p.number}</span> {p.name}
+          </h1>
+          <div className="flex flex-wrap gap-2 text-sm text-white/70">
+            <span className="px-2 py-0.5 rounded bg-white/10">
+              {p.position}
+            </span>
+            {p.nationality && (
+              <span className="px-2 py-0.5 rounded bg-white/10">
+                {p.nationality}
+              </span>
+            )}
+            {p.heightCm && (
+              <span className="px-2 py-0.5 rounded bg-white/10">
+                {p.heightCm} cm
+              </span>
+            )}
+          </div>
 
-          {/* ✅ BIO RENDERS HERE */}
           {p.bio && <p className="text-white/85 leading-7">{p.bio}</p>}
 
-          <section className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-center">
-              <div className="text-2xl font-extrabold">{p.appearances}</div>
-              <div className="text-xs text-white/70">Appearances</div>
-            </div>
-            <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-center">
-              <div className="text-2xl font-extrabold">{p.goals}</div>
+          <ul className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <li className="glass rounded-xl p-3 text-center">
+              <div className="text-xs text-white/70">Apps</div>
+              <div className="text-xl font-bold">{p.appearances}</div>
+            </li>
+            <li className="glass rounded-xl p-3 text-center">
               <div className="text-xs text-white/70">Goals</div>
-            </div>
-            <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-center">
-              <div className="text-2xl font-extrabold">{p.assists}</div>
+              <div className="text-xl font-bold">{p.goals}</div>
+            </li>
+            <li className="glass rounded-xl p-3 text-center">
               <div className="text-xs text-white/70">Assists</div>
+              <div className="text-xl font-bold">{p.assists}</div>
+            </li>
+          </ul>
+
+          {p.photos?.length ? (
+            <div className="pt-2">
+              <div className="text-sm mb-2 text-white/70">Gallery</div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {p.photos
+                  .slice()
+                  .sort((a: any, b: any) => (a.sort ?? 0) - (b.sort ?? 0))
+                  .map((img: any) => (
+                    <div
+                      key={img.id}
+                      className="relative aspect-[4/3] rounded-lg overflow-hidden border border-white/10"
+                    >
+                      <Image
+                        src={img.url}
+                        alt={img.alt ?? p.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+              </div>
             </div>
-          </section>
+          ) : null}
         </div>
       </div>
     </div>

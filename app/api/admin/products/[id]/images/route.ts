@@ -6,32 +6,23 @@ export const runtime = "nodejs";
 
 export async function POST(
   req: Request,
-  context: { params: Promise<{ id: string }> } // Next 15: params is a Promise
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isAdminRequest(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await context.params; // ✅ await params
+  const { id } = await params; // 👈 await the async params
+  const body = await req.json(); // { url, alt?, sort? }
 
-  let body: any;
-  try {
-    body = await req.json(); // { url, alt?, sort? }
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const url = typeof body.url === "string" ? body.url.trim() : "";
-  if (!url) {
-    return NextResponse.json({ error: "url is required" }, { status: 400 });
-  }
-
-  const alt = typeof body.alt === "string" ? body.alt : null;
-  const sort = typeof body.sort === "number" ? body.sort : 0;
-
-  const image = await prisma.productImage.create({
-    data: { productId: id, url, alt, sort },
+  const created = await prisma.productImage.create({
+    data: {
+      productId: id,
+      url: String(body.url),
+      alt: body.alt ?? null,
+      sort: Number(body.sort ?? 0),
+    },
   });
 
-  return NextResponse.json({ image }, { status: 201 });
+  return NextResponse.json({ image: created });
 }

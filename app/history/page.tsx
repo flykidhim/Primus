@@ -6,7 +6,7 @@ export default function HistoryPage() {
       <div className="glass rounded-2xl p-5 border-brand-gold/30">
         <div className="flex items-center gap-3">
           <Image
-            src="/brand/primus-logo.svg"
+            src="/brand/primus-logo.png"
             alt="Primus FC"
             width={48}
             height={48}

@@ -5,40 +5,21 @@ import { notFound } from "next/navigation";
 import { getMediaById, getRelatedMedia } from "@/lib/repos";
 import VideoPlayer from "@/components/media/VideoPlayer";
 
-type MediaItem = {
-  id: string;
-  title: string;
-  url: string;
-  posterUrl?: string | null;
-  type: "photo" | "video" | string;
-  category?: string | null;
-  description?: string | null;
-  tags?: string[] | null;
-  createdAt?: string | Date | null;
-};
-
 export default async function MediaDetail({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params; // ✅ Next 15 expects this
+  const { id } = await params;
 
-  const item = (await getMediaById(id)) as MediaItem | null;
+  const item = await getMediaById(id);
   if (!item) return notFound();
 
-  const related = (await getRelatedMedia(
-    item.category ?? "All",
-    item.id
-  )) as MediaItem[];
-
-  const isVideo =
-    item.type === "video" ||
-    (typeof item.url === "string" &&
-      (item.url.endsWith(".mp4") ||
-        item.url.endsWith(".webm") ||
-        item.url.includes("youtube.com") ||
-        item.url.includes("youtu.be")));
+  const related = await getRelatedMedia(
+    (item as any).category,
+    (item as any).id
+  );
+  const isVideo = (item as any).type === "video";
 
   return (
     <div className="space-y-6">
@@ -49,15 +30,15 @@ export default async function MediaDetail({
       <article className="space-y-4">
         {isVideo ? (
           <VideoPlayer
-            src={item.url}
-            poster={item.posterUrl ?? undefined}
+            src={(item as any).url}
+            poster={(item as any).posterUrl}
             autoPlay={false}
           />
         ) : (
           <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/10">
             <Image
-              src={item.url}
-              alt={item.title}
+              src={(item as any).url}
+              alt={(item as any).title}
               fill
               className="object-cover"
               sizes="100vw"
@@ -66,16 +47,16 @@ export default async function MediaDetail({
         )}
 
         <header className="flex flex-col gap-2">
-          <h1 className="text-2xl font-extrabold">{item.title}</h1>
+          <h1 className="text-2xl font-extrabold">{(item as any).title}</h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-white/70">
-            {item.category && (
+            {(item as any).category && (
               <span className="px-2 py-0.5 rounded-md bg-white/10">
-                {item.category}
+                {(item as any).category}
               </span>
             )}
-            {item.createdAt && (
+            {(item as any).createdAt && (
               <span>
-                {new Date(String(item.createdAt)).toLocaleDateString()}
+                {new Date((item as any).createdAt).toLocaleDateString()}
               </span>
             )}
             {isVideo && (
@@ -86,13 +67,12 @@ export default async function MediaDetail({
           </div>
         </header>
 
-        {item.description && (
-          <p className="text-white/80">{item.description}</p>
+        {(item as any).description && (
+          <p className="text-white/80">{(item as any).description}</p>
         )}
-
-        {item.tags?.length ? (
+        {(item as any).tags?.length ? (
           <ul className="flex flex-wrap gap-2">
-            {item.tags.map((t) => (
+            {(item as any).tags.map((t: string) => (
               <li
                 key={t}
                 className="text-xs px-2 py-1 rounded-lg border border-white/10 bg-white/5"
@@ -108,15 +88,8 @@ export default async function MediaDetail({
         <section className="space-y-3">
           <h2 className="text-lg font-bold">Related</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {related.map((m) => {
+            {related.map((m: any) => {
               const thumb = m.type === "video" ? m.posterUrl || m.url : m.url;
-              const relIsVideo =
-                m.type === "video" ||
-                (typeof m.url === "string" &&
-                  (m.url.endsWith(".mp4") ||
-                    m.url.endsWith(".webm") ||
-                    m.url.includes("youtube.com") ||
-                    m.url.includes("youtu.be")));
               return (
                 <Link
                   key={m.id}
@@ -125,11 +98,10 @@ export default async function MediaDetail({
                 >
                   <div className="relative aspect-video rounded-xl overflow-hidden border border-white/10">
                     <Image
-                      src={thumb || m.url}
+                      src={thumb}
                       alt={m.title}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                      sizes="(max-width:768px) 50vw, 25vw"
                     />
                     <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
                       <div className="text-sm font-semibold line-clamp-1">
@@ -142,7 +114,7 @@ export default async function MediaDetail({
                       )}
                     </div>
                   </div>
-                  {relIsVideo && (
+                  {m.type === "video" && (
                     <span className="absolute inset-0 grid place-items-center">
                       <span className="h-8 w-8 rounded-full bg-black/70 grid place-items-center">
                         <svg

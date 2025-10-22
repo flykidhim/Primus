@@ -6,15 +6,16 @@ export const runtime = "nodejs";
 
 export async function PUT(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isAdminRequest(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await context.params; // ← await the params
+  const { id } = await params; // 👈 Next 15: await params
   const body = await req.json();
-  const product = await prisma.product.update({
+
+  const updated = await prisma.product.update({
     where: { id },
     data: {
       name: body.name,
@@ -25,18 +26,20 @@ export async function PUT(
       imageUrl: body.imageUrl || null,
     },
   });
-  return NextResponse.json({ product });
+
+  return NextResponse.json({ product: updated });
 }
 
 export async function DELETE(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isAdminRequest(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await context.params; // ← await the params
+  const { id } = await params; // 👈 Next 15: await params
   await prisma.product.delete({ where: { id } });
+
   return NextResponse.json({ ok: true });
 }

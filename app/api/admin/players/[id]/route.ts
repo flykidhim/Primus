@@ -6,14 +6,15 @@ export const runtime = "nodejs";
 
 export async function PUT(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isAdminRequest(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await context.params; // ← await the params
+  const { id } = await params; // 👈 Next 15: await params
   const body = await req.json();
+
   const updated = await prisma.player.update({
     where: { id },
     data: {
@@ -26,18 +27,20 @@ export async function PUT(
       photoUrl: body.photoUrl || null,
     },
   });
+
   return NextResponse.json({ player: updated });
 }
 
 export async function DELETE(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await isAdminRequest(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await context.params; // ← await the params
+  const { id } = await params; // 👈 Next 15: await params
   await prisma.player.delete({ where: { id } });
+
   return NextResponse.json({ ok: true });
 }
