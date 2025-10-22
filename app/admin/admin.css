@@ -1,0 +1,32 @@
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-br: rgba(255, 255, 255, 0.12);
+}
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-br);
+  backdrop-filter: blur(10px);
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  background: #f5c842;
+  color: #0b0f19;
+  font-weight: 600;
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+}
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  background: transparent;
+}
