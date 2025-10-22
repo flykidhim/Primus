@@ -1,46 +1,36 @@
+// app/api/admin/players/[id]/route.ts
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminRequest } from "@/lib/auth";
 
-export const runtime = "nodejs";
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  if (!(await isAdminRequest(req))) {
+export async function PUT(req: Request, ctx: Ctx) {
+  if (!(await isAdminRequest(req)))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await params; // 👈 Next 15: await params
-  const body = await req.json();
-
+  const { id } = await ctx.params;
+  const b = await req.json();
   const updated = await prisma.player.update({
     where: { id },
     data: {
-      name: body.name,
-      position: body.position,
-      number: Number(body.number),
-      nationality: body.nationality || null,
-      heightCm: body.heightCm ? Number(body.heightCm) : null,
-      bio: body.bio || null,
-      photoUrl: body.photoUrl || null,
+      name: b.name,
+      position: b.position,
+      number: Number(b.number),
+      nationality: b.nationality || null,
+      heightCm: b.heightCm ? Number(b.heightCm) : null,
+      bio: b.bio || null,
+      photoUrl: b.photoUrl || null,
     },
   });
-
   return NextResponse.json({ player: updated });
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  if (!(await isAdminRequest(req))) {
+export async function DELETE(req: Request, ctx: Ctx) {
+  if (!(await isAdminRequest(req)))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await params; // 👈 Next 15: await params
+  const { id } = await ctx.params;
   await prisma.player.delete({ where: { id } });
-
   return NextResponse.json({ ok: true });
 }

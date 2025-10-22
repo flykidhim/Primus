@@ -1,19 +1,13 @@
-import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { withAdminCookie } from "@/lib/auth";
+// app/api/admin/login/route.ts
+export const runtime = "nodejs";
 
-export const runtime = "nodejs"; // ⬅️ important
+import { NextResponse } from "next/server";
+import { checkAdminPassword, withAdminCookie } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const { password } = await req.json();
-  const hash = process.env.ADMIN_PASSWORD_BCRYPT || "";
-  if (!hash) {
-    return NextResponse.json(
-      { error: "Server not configured" },
-      { status: 500 }
-    );
-  }
-  const ok = await bcrypt.compare(password, hash);
+  const ok = await checkAdminPassword(String(password || ""));
   if (!ok) return NextResponse.json({ error: "Invalid" }, { status: 401 });
-  return withAdminCookie(NextResponse.json({ ok: true }));
+  const res = NextResponse.json({ ok: true });
+  return withAdminCookie(res);
 }

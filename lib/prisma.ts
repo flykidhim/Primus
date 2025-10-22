@@ -1,4 +1,17 @@
+// lib/prisma.ts
+import "server-only";
 import { PrismaClient } from "@prisma/client";
-declare global { var prisma: PrismaClient | undefined }
-export const prisma = global.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") global.prisma = prisma;
+
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+
+// NEVER call $connect() here.
+// Just instantiate and cache for dev HMR.
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    // log: ['query'], // optional when debugging
+  });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
