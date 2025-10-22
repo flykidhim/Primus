@@ -7,47 +7,47 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminRequest } from "@/lib/auth";
 
-/**
- * POST body: {
- *   name: string; position: string; number: number | string;
- *   nationality?: string; heightCm?: number | string;
- *   bio?: string; photoUrl?: string;
- * }
- * NOTE: You already have POST /api/admin/players. This is a legacy shim.
- */
 export async function POST(req: Request) {
   try {
     if (!(await isAdminRequest(req))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const b = await req.json().catch(() => ({}));
-    if (!b?.name || !b?.position || b?.number == null) {
-      return NextResponse.json(
-        { error: "Missing name/position/number" },
-        { status: 400 }
-      );
+    // Accepts either JSON or form-data. Pick ONE flow in your UI; both supported here.
+    const contentType = req.headers.get("content-type") || "";
+    let payload: any = {};
+    if (contentType.includes("application/json")) {
+      payload = await req.json();
+    } else {
+      const form = await req.formData();
+      payload = Object.fromEntries(form.entries());
     }
 
     const created = await prisma.player.create({
       data: {
-        name: String(b.name),
-        position: String(b.position),
-        number: Number(b.number),
-        nationality: b.nationality ? String(b.nationality) : null,
+        name: String(payload.name ?? ""),
+        position: String(payload.position ?? "FW"),
+        number: Number(payload.number ?? 0),
+        nationality: payload.nationality ? String(payload.nationality) : null,
         heightCm:
-          b.heightCm !== undefined && b.heightCm !== ""
-            ? Number(b.heightCm)
+          payload.heightCm !== undefined &&
+          String(payload.heightCm).trim() !== ""
+            ? Number(payload.heightCm)
             : null,
-        bio: b.bio ? String(b.bio) : null,
-        photoUrl: b.photoUrl ? String(b.photoUrl) : null,
+        bio: payload.bio ? String(payload.bio) : null,
+        photoUrl: payload.photoUrl ? String(payload.photoUrl) : null,
       },
     });
 
-    return NextResponse.json({ player: created });
+    const base = new URL(req.url);
+    // Go to the player detail page in admin
+    return NextResponse.redirect(
+      new URL(`/admin/players/${created.id}`, base.origin),
+      303
+    );
   } catch (e: any) {
     return NextResponse.json(
-      { error: "Create failed", message: e?.message ?? String(e) },
+      { error: "Failed to create player", message: e?.message ?? String(e) },
       { status: 500 }
     );
   }
