@@ -12,28 +12,20 @@ export async function POST(req: Request) {
     if (!(await isAdminRequest(req))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const ct = req.headers.get("content-type") || "";
+    let body: any = {};
+    if (ct.includes("application/json")) body = await req.json();
+    else body = Object.fromEntries((await req.formData()).entries());
 
-    const form = await req.formData();
-    const playerId = String(form.get("playerId") ?? "");
-    if (!playerId) {
-      return NextResponse.json({ error: "Missing playerId" }, { status: 400 });
-    }
+    const id = String(body.id ?? "");
+    if (!id)
+      return NextResponse.json({ error: "Missing player id" }, { status: 400 });
 
-    await prisma.player.delete({ where: { id: playerId } });
-
-    // Redirect back to the players admin list
-    const base = new URL(req.url);
-    return NextResponse.redirect(new URL("/admin/players", base.origin), 303);
+    await prisma.player.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
   } catch (e: any) {
-    // Handle FK issues if you later relate images, etc.
-    if (e?.code === "P2003") {
-      return NextResponse.json(
-        { error: "Cannot delete: player referenced by other records" },
-        { status: 400 }
-      );
-    }
     return NextResponse.json(
-      { error: "Failed to delete player", message: e?.message ?? String(e) },
+      { error: "Failed to delete player", message: e?.message },
       { status: 500 }
     );
   }

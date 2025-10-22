@@ -7,57 +7,49 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminRequest } from "@/lib/auth";
 
-/**
- * Legacy create shim.
- * Method: POST
- * Body: {
- *   name: string;            // required
- *   slug: string;            // required (unique)
- *   priceCents: number|string; // required
- *   stock?: number|string;
- *   description?: string|null;
- *   imageUrl?: string|null;
- * }
- *
- * NOTE: Canonical route already exists:
- *   POST /api/admin/products
- */
 export async function POST(req: Request) {
   try {
     if (!(await isAdminRequest(req))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const b = await req.json().catch(() => ({} as any));
-    if (!b?.name || !b?.slug || b?.priceCents == null) {
+    const ct = req.headers.get("content-type") || "";
+    let body: any = {};
+    if (ct.includes("application/json")) {
+      body = await req.json();
+    } else {
+      const form = await req.formData();
+      body = Object.fromEntries(form.entries());
+    }
+
+    const name = String(body.name ?? "").trim();
+    const slug = String(body.slug ?? "").trim();
+    const priceCents = Number(body.priceCents ?? 0);
+    const stock = Number(body.stock ?? 0);
+    const description = body.description ? String(body.description) : null;
+    const imageUrl = body.imageUrl ? String(body.imageUrl) : null;
+
+    if (!name || !slug || !Number.isFinite(priceCents)) {
       return NextResponse.json(
-        { error: "Missing name/slug/priceCents" },
+        { error: "Missing/invalid fields" },
         { status: 400 }
       );
     }
 
-    const created = await prisma.product.create({
-      data: {
-        name: String(b.name),
-        slug: String(b.slug),
-        priceCents: Number(b.priceCents),
-        stock: b.stock != null ? Number(b.stock) : 0,
-        description: b.description ? String(b.description) : null,
-        imageUrl: b.imageUrl ? String(b.imageUrl) : null,
-      },
+    const product = await prisma.product.create({
+      data: { name, slug, priceCents, stock, description, imageUrl },
+      select: { id: true, slug: true },
     });
 
-    return NextResponse.json({ product: created });
+    // Redirect to product admin page
+    const base = new URL(req.url);
+    return NextResponse.redirect(
+      new URL(`/admin/products/${product.id}`, base.origin),
+      303
+    );
   } catch (e: any) {
-    // Handle unique slug errors nicely
-    if (e?.code === "P2002") {
-      return NextResponse.json(
-        { error: "Slug already exists" },
-        { status: 409 }
-      );
-    }
     return NextResponse.json(
-      { error: "Create failed", message: e?.message ?? String(e) },
+      { error: "Failed to create product", message: e?.message },
       { status: 500 }
     );
   }

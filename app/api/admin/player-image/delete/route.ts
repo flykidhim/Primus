@@ -7,27 +7,26 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminRequest } from "@/lib/auth";
 
-/**
- * POST body: { imageId: string }
- * NOTE: Your canonical route is DELETE /api/admin/players/[id]/images/[imageId].
- * This is a legacy shim.
- */
 export async function POST(req: Request) {
   try {
     if (!(await isAdminRequest(req))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const body = await req.json().catch(() => ({}));
-    const imageId = String(body?.imageId ?? "");
-    if (!imageId) {
+
+    const ct = req.headers.get("content-type") || "";
+    let body: any = {};
+    if (ct.includes("application/json")) body = await req.json();
+    else body = Object.fromEntries((await req.formData()).entries());
+
+    const imageId = String(body.imageId ?? "");
+    if (!imageId)
       return NextResponse.json({ error: "Missing imageId" }, { status: 400 });
-    }
 
     await prisma.playerImage.delete({ where: { id: imageId } });
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json(
-      { error: "Delete failed", message: e?.message ?? String(e) },
+      { error: "Failed to delete player image", message: e?.message },
       { status: 500 }
     );
   }

@@ -13,41 +13,39 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Accepts either JSON or form-data. Pick ONE flow in your UI; both supported here.
-    const contentType = req.headers.get("content-type") || "";
-    let payload: any = {};
-    if (contentType.includes("application/json")) {
-      payload = await req.json();
-    } else {
-      const form = await req.formData();
-      payload = Object.fromEntries(form.entries());
+    const ct = req.headers.get("content-type") || "";
+    let body: any = {};
+    if (ct.includes("application/json")) body = await req.json();
+    else body = Object.fromEntries((await req.formData()).entries());
+
+    const name = String(body.name ?? "").trim();
+    const position = String(body.position ?? "").trim();
+    const number = Number(body.number ?? 0);
+    const nationality = body.nationality ? String(body.nationality) : null;
+    const heightCm = body.heightCm ? Number(body.heightCm) : null;
+    const bio = body.bio ? String(body.bio) : null;
+    const photoUrl = body.photoUrl ? String(body.photoUrl) : null;
+
+    if (!name || !position || !Number.isFinite(number)) {
+      return NextResponse.json(
+        { error: "Missing/invalid fields" },
+        { status: 400 }
+      );
     }
 
-    const created = await prisma.player.create({
-      data: {
-        name: String(payload.name ?? ""),
-        position: String(payload.position ?? "FW"),
-        number: Number(payload.number ?? 0),
-        nationality: payload.nationality ? String(payload.nationality) : null,
-        heightCm:
-          payload.heightCm !== undefined &&
-          String(payload.heightCm).trim() !== ""
-            ? Number(payload.heightCm)
-            : null,
-        bio: payload.bio ? String(payload.bio) : null,
-        photoUrl: payload.photoUrl ? String(payload.photoUrl) : null,
-      },
+    const player = await prisma.player.create({
+      data: { name, position, number, nationality, heightCm, bio, photoUrl },
+      select: { id: true },
     });
 
     const base = new URL(req.url);
-    // Go to the player detail page in admin
     return NextResponse.redirect(
-      new URL(`/admin/players/${created.id}`, base.origin),
+      new URL(`/admin/players/${player.id}`, base.origin),
       303
     );
   } catch (e: any) {
     return NextResponse.json(
-      { error: "Failed to create player", message: e?.message ?? String(e) },
+      { error: "Failed to create player", message: e?.message },
       { status: 500 }
     );
   }
