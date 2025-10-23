@@ -97,6 +97,8 @@ model Product {
   imageUrl    String?     // primary/cover image
   description String?
   stock       Int      @default(0)
+  badge       String?     // New field for product badges (New, Sale, etc.)
+  category    String?     // New field for product categories (kits, training, accessories)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -116,12 +118,15 @@ model ProductImage {
 }
 
 model Media {
-  id        String   @id @default(cuid())
-  title     String
-  type      String           // photo | video | reel etc.
-  url       String
-  category  String?          // optional organization: Training | Matchday | Press
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  title       String
+  type        String           // photo | video
+  url         String
+  posterUrl   String?          // for videos - thumbnail image
+  category    String?          // Training | Matchday | Press | Events | Behind the Scenes
+  description String?
+  tags        String[]         // array of tags for filtering and search
+  createdAt   DateTime @default(now())
 
   @@index([type, createdAt])
   @@index([category, createdAt])
@@ -134,9 +139,9 @@ model Standing {
   won       Int
   drawn     Int
   lost      Int
-  gf        Int
-  ga        Int
-  gd        Int
+  gf        Int      // goals for
+  ga        Int      // goals against
+  gd        Int      // goal difference
   points    Int
   position  Int
   season    String

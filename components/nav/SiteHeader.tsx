@@ -4,19 +4,26 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-
-// ✅ Static import prevents 404s and gives a blur placeholder
 import logo from "@/public/brand/primus-logo.png";
 
-const NAV = [
+type NavItem = { href: string; label: string };
+
+const NAV: NavItem[] = [
   { href: "/", label: "Home" },
   { href: "/team", label: "Team" },
   { href: "/fixtures", label: "Fixtures" },
   { href: "/news", label: "News" },
   { href: "/media", label: "Media" },
-  { href: "/history", label: "History" },
+  { href: "/about", label: "About" }, // unified About/History
+  { href: "/contact", label: "Contact" }, // ✅ added
   { href: "/shop", label: "Shop" },
 ];
+
+function isActive(pathname: string | null, href: string) {
+  if (!pathname) return false;
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(href + "/");
+}
 
 export default function SiteHeader() {
   const pathname = usePathname();
@@ -24,7 +31,7 @@ export default function SiteHeader() {
   const [showSearch, setShowSearch] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll when drawer is open
+  // Lock body scroll when drawer open
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = open ? "hidden" : prev || "";
@@ -33,18 +40,18 @@ export default function SiteHeader() {
     };
   }, [open]);
 
-  // Click outside to close
+  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const onClick = (e: MouseEvent) => {
-      if (!drawerRef.current) return;
-      if (!drawerRef.current.contains(e.target as Node)) setOpen(false);
+      if (drawerRef.current && !drawerRef.current.contains(e.target as Node))
+        setOpen(false);
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
   }, [open]);
 
-  // ESC closes things
+  // ESC closes
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -56,7 +63,7 @@ export default function SiteHeader() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Close drawer/search on route change
+  // Close on route change
   useEffect(() => {
     setOpen(false);
     setShowSearch(false);
@@ -65,9 +72,8 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 bg-[#0B0F19] border-b border-white/10">
       <div className="container h-16 flex items-center justify-between gap-3">
-        {/* Brand + hamburger */}
+        {/* Left: hamburger + brand */}
         <div className="flex items-center gap-3">
-          {/* Hamburger (mobile) */}
           <button
             aria-label="Open menu"
             aria-expanded={open}
@@ -78,8 +84,8 @@ export default function SiteHeader() {
               width="20"
               height="20"
               viewBox="0 0 24 24"
-              aria-hidden
               fill="none"
+              aria-hidden
             >
               <path
                 stroke="currentColor"
@@ -89,11 +95,10 @@ export default function SiteHeader() {
             </svg>
           </button>
 
-          {/* Brand: logo + name — ALWAYS visible (mobile + desktop) */}
           <Link
             href="/"
-            className="flex items-center gap-2 sm:gap-3"
             aria-label="Primus FC home"
+            className="flex items-center gap-2 sm:gap-3"
           >
             <Image
               src={logo}
@@ -102,17 +107,10 @@ export default function SiteHeader() {
               height={40}
               className="h-9 w-9 sm:h-10 sm:w-10 rounded-full ring-1 ring-white/10 shadow"
               priority
-              placeholder="blur"
+              // removed placeholder="blur" to avoid 40×40 warning if source is small
               sizes="(max-width:640px) 36px, 40px"
             />
-            <span
-              className="
-                font-extrabold tracking-wide
-                text-sm sm:text-base
-                whitespace-nowrap truncate
-                max-w-[120px] sm:max-w-none
-              "
-            >
+            <span className="font-extrabold tracking-wide text-sm sm:text-base">
               <span className="text-white">PRIMUS</span>{" "}
               <span className="text-brand-gold">FC</span>
             </span>
@@ -122,7 +120,7 @@ export default function SiteHeader() {
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-6">
           {NAV.map((n) => {
-            const active = pathname === n.href;
+            const active = isActive(pathname, n.href);
             return (
               <Link
                 key={n.href}
@@ -172,7 +170,7 @@ export default function SiteHeader() {
                 className="flex-1 px-3 py-2 rounded-xl bg-[#111726] border border-white/15 text-white placeholder:text-white/55"
                 aria-label="Search site"
               />
-              <button className="inline-flex items-center justify-center rounded-xl bg-brand-gold px-4 py-2 font-semibold text-black hover:brightness-110">
+              <button className="rounded-xl bg-brand-gold px-4 py-2 font-semibold text-black hover:brightness-110">
                 Search
               </button>
             </form>
@@ -217,7 +215,6 @@ export default function SiteHeader() {
                 height={26}
                 className="h-7 w-7 rounded-full ring-1 ring-white/10"
                 priority
-                placeholder="blur"
               />
               <b className="text-sm">
                 <span className="text-white">PRIMUS</span>{" "}
@@ -235,7 +232,7 @@ export default function SiteHeader() {
 
           <nav className="flex flex-col gap-1">
             {NAV.map((n) => {
-              const active = pathname === n.href;
+              const active = isActive(pathname, n.href);
               return (
                 <Link
                   key={n.href}
