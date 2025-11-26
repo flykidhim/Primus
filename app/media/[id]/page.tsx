@@ -5,13 +5,9 @@ import { notFound } from "next/navigation";
 import { getMediaById, getRelatedMedia } from "@/lib/repos";
 import VideoPlayer from "@/components/media/VideoPlayer";
 
-export default async function MediaDetail({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  // ✅ Next expects params as a Promise in your generated types, so we align with that
-  const { id } = await params;
+// ✅ Loosen the prop typing here so we don't fight Next's generated PageProps
+export default async function MediaDetail(props: any) {
+  const { id } = props.params;
 
   const item = await getMediaById(id);
   if (!item) return notFound();
