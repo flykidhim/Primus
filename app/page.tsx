@@ -9,10 +9,11 @@ import {
   getProducts,
   getRecentMatch,
   getUpcomingMatch,
+  getStaff,
 } from "@/lib/repos";
 
 export default async function HomePage() {
-  const [mediaAll, upcoming, recent, products, players, news, gallery] =
+  const [mediaAll, upcoming, recent, products, players, news, gallery, staff] =
     await Promise.all([
       getMedia(),
       getUpcomingMatch(),
@@ -21,6 +22,7 @@ export default async function HomePage() {
       getPlayers(),
       getArticles(),
       getMedia("Matchday"),
+      getStaff(),
     ]);
 
   // Create slides - starting with club vision slides, then media
@@ -30,26 +32,50 @@ export default async function HomePage() {
       title: "More Than a Club",
       subtitle:
         "We are a movement of hope, opportunity, and transformation for young African footballers from underserved communities.",
-      image: "/media/gallery/gallery-4.jpg", // Fans image representing community
+      image: "/media/gallery/gallery-4.jpg",
       overlay: "dark" as const,
       cta: {
         label: "Join Our Mission",
-        href: "/about",
+        href: "/about", // ✅ About page
       },
     },
     // Club Vision Slide 2
     {
       title: "Building Legacies",
       subtitle:
-        "Creating world-class footballers and responsible global citizens who inspire the next generation and uplift their communities.",
-      image: "/media/gallery/gallery-2.jpg", // Training image representing development
+        "From academy to first team, we are creating pathways for the next generation of stars.",
+      image: "/media/gallery/gallery-1.jpg",
       overlay: "dark" as const,
       cta: {
-        label: "Our Vision",
-        href: "/about",
+        label: "Meet the Squad",
+        href: "/team", // ✅ Team page
       },
     },
-    // Media slides
+    // Matchday / Tickets slide
+    {
+      title: "Matchday Experience",
+      subtitle:
+        "Secure your seat at Primus Arena and feel the energy from the first whistle.",
+      image: "/media/gallery/gallery-2.jpg",
+      overlay: "dark" as const,
+      cta: {
+        label: "Get Tickets",
+        href: "/tickets", // ✅ Tickets page
+      },
+    },
+    // Shop slide
+    {
+      title: "Wear the Gold",
+      subtitle:
+        "Official Primus FC jerseys, training wear and lifestyle merch.",
+      image: "/media/gallery/gallery-3.jpg",
+      overlay: "dark" as const,
+      cta: {
+        label: "Shop Merch",
+        href: "/shop", // ✅ Shop page
+      },
+    },
+    // Media slides (dynamic, from DB / data)
     ...mediaAll.slice(0, 3).map((m: any) => ({
       title: m.title,
       subtitle: "Experience the Gold Standard of Football Excellence",
@@ -60,7 +86,7 @@ export default async function HomePage() {
       overlay: "dark" as const,
       cta: {
         label: m.type === "video" ? "Watch Highlights" : "Explore Gallery",
-        href: `/media/${m.id}`,
+        href: `/media/${m.id}`, // ✅ Goes to media detail page
       },
     })),
   ];
@@ -69,6 +95,7 @@ export default async function HomePage() {
   const latestNews = news.slice(0, 4);
   const latestGallery = gallery.slice(0, 8);
   const shopPicks = products.slice(0, 8);
+  const staffSpotlight = staff.slice(0, 4);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-950">
@@ -458,6 +485,81 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Staff Spotlight */}
+      {staffSpotlight.length > 0 && (
+        <section className="py-12 lg:py-16 bg-slate-950/70 border-t border-white/5">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-8 lg:mb-12">
+              <div className="mb-6 lg:mb-0">
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-brand-gold/20 border border-brand-gold/30 mb-4">
+                  <span className="text-brand-gold text-sm font-semibold uppercase tracking-wider">
+                    Behind The Team
+                  </span>
+                </div>
+                <h2 className="text-2xl lg:text-4xl font-black text-white mb-3">
+                  Technical{" "}
+                  <span className="bg-gradient-to-r from-brand-gold to-yellow-400 bg-clip-text text-transparent">
+                    Staff
+                  </span>
+                </h2>
+                <p className="text-sm lg:text-base text-white/70 max-w-xl">
+                  The coaches and staff who prepare the squad, manage the
+                  details, and keep Primus FC running at a professional level.
+                </p>
+              </div>
+              <Link
+                href="/about"
+                className="group inline-flex items-center px-6 py-3 rounded-full border-2 border-white/30 text-white font-semibold hover:bg-white hover:text-black transition-all duration-300 self-start"
+              >
+                Learn More About The Club
+                <svg
+                  className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
+                </svg>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+              {staffSpotlight.map((s: any) => (
+                <div
+                  key={s.id}
+                  className="group rounded-2xl bg-white/5 border border-white/10 hover:border-brand-gold/40 overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                >
+                  <div className="relative aspect-[4/5] bg-slate-900">
+                    <img
+                      src={s.photoUrl || "/brand/primus-logo.png"}
+                      alt={s.name}
+                      className="w-full h-full object-cover object-[center_30%] group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-white/60 mb-1">
+                        {s.area || "Staff"}
+                      </div>
+                      <div className="text-xs font-bold text-white leading-tight">
+                        {s.name}
+                      </div>
+                      <div className="text-[10px] text-brand-gold font-medium">
+                        {s.role}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* News & Media Combined Section */}
       <section className="py-16 lg:py-24">

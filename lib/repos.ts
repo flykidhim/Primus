@@ -3,6 +3,7 @@ import { products } from "@/data/products";
 import { articles } from "@/data/news";
 import { media } from "@/data/media";
 import { matches } from "@/data/matches";
+import { staff } from "@/data/staff";
 
 const useDev = process.env.NEXT_PUBLIC_DATA_MODE === "dev";
 
@@ -97,4 +98,9 @@ export async function getRecentMatch() {
     .filter((m) => m.status === "FT")
     .sort((a, b) => (a.date < b.date ? 1 : -1));
   return fts[0] ?? null;
+}
+
+export async function getStaff() {
+  // For now we use static data only
+  return staff;
 }

@@ -1,12 +1,15 @@
 import Image from "next/image";
+import { getStaff } from "@/lib/repos";
 
 export const metadata = {
   title: "About — Primus FC",
   description:
-    "Discover the story, mission, and vision behind Primus FC - more than a football club, a movement for change.",
+    "Discover the story, mission, vision, and people behind Primus FC - more than a football club, a movement for change.",
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const staff = await getStaff();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950">
       {/* Hero Section */}
@@ -181,6 +184,64 @@ export default function AboutPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Coaches & Staff */}
+      <section className="py-16 lg:py-24 bg-slate-950/70 border-y border-white/10">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 lg:mb-16">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-brand-gold/20 border border-brand-gold/30 mb-4">
+              <span className="text-brand-gold text-sm font-semibold uppercase tracking-wider">
+                Behind The Team
+              </span>
+            </div>
+            <h2 className="text-3xl lg:text-5xl font-black text-white mb-4">
+              Coaches &{" "}
+              <span className="bg-gradient-to-r from-brand-gold to-yellow-400 bg-clip-text text-transparent">
+                Staff
+              </span>
+            </h2>
+            <p className="text-lg text-white/70 max-w-2xl mx-auto">
+              The people who design the sessions, manage the details, and make
+              sure Primus FC runs at a professional standard every day.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+            {staff.map((s) => (
+              <div
+                key={s.id}
+                className="group rounded-3xl bg-white/5 border border-white/10 hover:border-brand-gold/40 transition-all duration-300 overflow-hidden hover:-translate-y-1"
+              >
+                <div className="relative aspect-[4/5] bg-slate-900">
+                  <Image
+                    src={s.photoUrl || "/brand/primus-logo.png"}
+                    alt={s.name}
+                    fill
+                    className="object-cover object-[center_30%] group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <div className="text-xs font-semibold text-white/70 mb-1">
+                      {s.area || "Staff"}
+                    </div>
+                    <div className="text-lg font-black text-white">
+                      {s.name}
+                    </div>
+                    <div className="text-xs font-medium text-brand-gold">
+                      {s.role}
+                    </div>
+                  </div>
+                </div>
+                {s.bio && (
+                  <div className="p-4 lg:p-5 text-sm text-white/70">
+                    {s.bio}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>

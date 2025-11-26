@@ -7,9 +7,9 @@ import VideoPlayer from "@/components/media/VideoPlayer";
 export default async function MediaDetail({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
+  const { id } = params;
 
   const item = await getMediaById(id);
   if (!item) return notFound();
@@ -46,22 +46,24 @@ export default async function MediaDetail({
       </div>
 
       {/* Main Content */}
-      <section className="py-8 lg:py-12">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
+      <section className="py-2 lg:py-6">
+        <div className="container mx-auto px-0 lg:px-4">
+          <div className="max-w-7xl mx-auto">
             {/* Media Display */}
-            <div className="mb-8 lg:mb-12">
+            <div className="mb-10 lg:mb-14">
               {isVideo ? (
-                <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl">
-                  <VideoPlayer
-                    src={(item as any).url}
-                    poster={(item as any).posterUrl}
-                    autoPlay={true}
-                  />
+                <div className="relative rounded-none lg:rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl">
+                  <div className="relative w-full h-[60vh] sm:h-[70vh] lg:h-[80vh]">
+                    <VideoPlayer
+                      src={(item as any).url}
+                      poster={(item as any).posterUrl}
+                      autoPlay={true}
+                    />
+                  </div>
                 </div>
               ) : (
-                <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-slate-800 shadow-2xl">
-                  <div className="relative aspect-[16/9] lg:aspect-video">
+                <div className="relative rounded-none lg:rounded-3xl overflow-hidden border border-white/10 bg-slate-800 shadow-2xl">
+                  <div className="relative w-full h-[60vh] sm:h-[70vh] lg:h-[80vh]">
                     <Image
                       src={(item as any).url}
                       alt={(item as any).title}
@@ -77,33 +79,47 @@ export default async function MediaDetail({
 
             {/* Media Information */}
             <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
-              <div className="lg:col-span-2">
-                <header className="mb-6">
-                  <div className="flex flex-wrap items-center gap-3 mb-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        isVideo
-                          ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                          : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                      }`}
-                    >
-                      {isVideo ? "VIDEO" : "PHOTO"}
+              {/* Primary Info */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <span className="px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
+                    {isVideo ? "Match Highlights" : "Gallery Spotlight"}
+                  </span>
+                  <span className="text-xs font-medium text-white/60 border border-white/10 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur">
+                    {(item as any).type?.toUpperCase() || "MEDIA"}
+                  </span>
+                  {(item as any).category && (
+                    <span className="text-xs font-medium text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full bg-emerald-500/10">
+                      {(item as any).category}
                     </span>
-                    {(item as any).category && (
-                      <span className="px-3 py-1 rounded-full bg-brand-gold/20 text-brand-gold border border-brand-gold/30 text-sm font-semibold">
-                        {(item as any).category}
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-white/60">
+                    {(item as any).match && (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        <span className="font-semibold text-white/80">
+                          {(item as any).match.homeTeam}{" "}
+                          <span className="text-emerald-300">vs</span>{" "}
+                          {(item as any).match.awayTeam}
+                        </span>
                       </span>
                     )}
                     {(item as any).createdAt && (
-                      <span className="text-white/60 text-sm">
-                        {new Date((item as any).createdAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
-                        )}
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+                        <span>
+                          {new Date((item as any).createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
+                        </span>
                       </span>
                     )}
                   </div>
@@ -117,109 +133,77 @@ export default async function MediaDetail({
                       {(item as any).description}
                     </p>
                   )}
-                </header>
 
-                {/* Tags */}
-                {(item as any).tags?.length ? (
-                  <div className="mb-8">
-                    <h3 className="text-sm font-semibold text-white/70 mb-3 uppercase tracking-wider">
-                      Tags
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {(item as any).tags.map((t: string) => (
-                        <span
-                          key={t}
-                          className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/80 text-sm hover:bg-white/10 transition-colors"
-                        >
-                          #{t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Link
+                      href="/media"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-900 text-sm font-semibold shadow-lg shadow-white/20 hover:bg-slate-100 transition-all transform hover:scale-105"
+                    >
+                      ← Back to Media Hub
+                    </Link>
 
-                {/* Share Section */}
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                  <h3 className="font-semibold text-white mb-3">
-                    Share this {isVideo ? "video" : "photo"}
-                  </h3>
-                  <div className="flex gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm transition-all transform hover:scale-105">
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
+                    {isVideo && (item as any).match && (
+                      <Link
+                        href={`/matches/${(item as any).match.slug || ""}`}
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-white/20 text-sm font-semibold text-white hover:bg-white/10 transition-all"
                       >
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                      </svg>
-                      Share
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-black hover:bg-gray-900 text-white text-sm transition-all transform hover:scale-105 border border-white/20">
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.213c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-                      </svg>
-                      Tweet
-                    </button>
+                        View Match Details
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Metadata Sidebar */}
+              {/* Sidebar */}
               <div className="space-y-6">
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-800 to-purple-900/20 border border-white/10">
-                  <h3 className="font-semibold text-white mb-4">
-                    Media Information
-                  </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="text-sm text-white/70">Type</div>
-                      <div className="font-semibold text-white">
-                        {isVideo ? "Video Content" : "Photograph"}
-                      </div>
+                <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-5">
+                  <h2 className="text-sm font-semibold text-white/80 uppercase tracking-[0.18em] mb-4">
+                    Media Info
+                  </h2>
+                  <dl className="space-y-3 text-sm text-white/70">
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-white/50">Type</dt>
+                      <dd className="font-medium uppercase">
+                        {(item as any).type || "N/A"}
+                      </dd>
                     </div>
-                    {(item as any).category && (
-                      <div>
-                        <div className="text-sm text-white/70">Category</div>
-                        <div className="font-semibold text-white">
-                          {(item as any).category}
-                        </div>
+                    {(item as any).season && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-white/50">Season</dt>
+                        <dd className="font-medium">{(item as any).season}</dd>
                       </div>
                     )}
-                    {(item as any).createdAt && (
-                      <div>
-                        <div className="text-sm text-white/70">
-                          Date Published
-                        </div>
-                        <div className="font-semibold text-white">
-                          {new Date((item as any).createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              weekday: "long",
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )}
-                        </div>
+                    {(item as any).location && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-white/50">Location</dt>
+                        <dd className="font-medium">
+                          {(item as any).location}
+                        </dd>
                       </div>
                     )}
-                  </div>
+                    {(item as any).duration && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-white/50">Duration</dt>
+                        <dd className="font-medium">
+                          {(item as any).duration} mins
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
                 </div>
 
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                  <h3 className="font-semibold text-white mb-4">Download</h3>
-                  <p className="text-white/70 text-sm mb-4">
+                <div className="rounded-2xl border border-amber-400/20 bg-amber-500/5 backdrop-blur-xl p-5">
+                  <h2 className="text-sm font-semibold text-amber-300 uppercase tracking-[0.18em] mb-3">
+                    Media & Press
+                  </h2>
+                  <p className="text-sm text-amber-100/80 mb-3">
                     {isVideo
                       ? "This video is available for media use. Contact us for licensing."
                       : "High-resolution version available for press and media use."}
                   </p>
                   <a
                     href="/contact"
-                    className="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-full bg-brand-gold text-black font-semibold hover:bg-yellow-400 transition-all transform hover:scale-105"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-amber-400 text-slate-950 text-sm font-semibold hover:bg-amber-300 transition-all transform hover:scale-105"
                   >
                     Request Media Access
                   </a>

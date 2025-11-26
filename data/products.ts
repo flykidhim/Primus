@@ -21,10 +21,10 @@ export const products: Product[] = [
     priceCents: 6999,
     description:
       "Official home jersey for the 2024/25 season featuring gold trim, advanced breathable fabric technology, and moisture-wicking properties. Includes player name and number printing options.",
-    imageUrl: "/media/products/product-5.jpg",
+    imageUrl: "/media/products/product-1.jpg",
     images: [
       {
-        url: "/media/products/product-4.jpg",
+        url: "/media/products/product-2.jpg",
         alt: "Home kit front view",
         sort: 0,
       },
@@ -62,7 +62,7 @@ export const products: Product[] = [
     priceCents: 6999,
     description:
       "Limited edition third kit featuring a unique pattern inspired by the city's industrial heritage. Black base with metallic gold details.",
-    imageUrl: "/media/products/product-11.jpg",
+    imageUrl: "/media/products/product-9.jpg",
     category: "kits",
     stock: 45,
     badge: "Limited",
@@ -96,7 +96,7 @@ export const products: Product[] = [
     priceCents: 5999,
     description:
       "Water-resistant training jacket with thermal lining. Perfect for cold weather training sessions.",
-    imageUrl: "/media/products/product-12.jpg",
+    imageUrl: "/media/products/product-8.jpg",
     category: "training",
     stock: 60,
   },
@@ -107,7 +107,7 @@ export const products: Product[] = [
     priceCents: 2499,
     description:
       "Adjustable baseball cap with embroidered club logo. Available in black with gold detailing.",
-    imageUrl: "/media/products/product-13.jpg",
+    imageUrl: "/media/products/product-1.jpg",
     category: "accessories",
     stock: 150,
   },
@@ -118,7 +118,7 @@ export const products: Product[] = [
     priceCents: 1499,
     description:
       "Ceramic mug featuring the club crest and classic black and gold colors. Holds 350ml.",
-    imageUrl: "/media/products/product-14.jpg",
+    imageUrl: "/media/products/product-6.jpg",
     category: "merchandise",
     stock: 200,
   },
@@ -129,7 +129,7 @@ export const products: Product[] = [
     priceCents: 2999,
     description:
       "Official match ball used in Premier League games. Features high-quality construction for optimal performance.",
-    imageUrl: "/media/products/product-15.jpg",
+    imageUrl: "/media/products/product-1.jpg",
     category: "equipment",
     stock: 75,
   },
@@ -140,7 +140,7 @@ export const products: Product[] = [
     priceCents: 4999,
     description:
       "Junior version of the official home kit. Available in sizes for ages 3-14. Same quality and design as adult version.",
-    imageUrl: "/media/products/product-16.jpg",
+    imageUrl: "/media/products/product-9.jpg",
     category: "kids",
     stock: 90,
     badge: "Popular",

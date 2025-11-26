@@ -75,9 +75,11 @@ export default function HeroCarousel({
               alt={s.title}
               fill
               priority={i === 0}
-              className="object-cover"
+              // Better centering / focus of the hero background
+              className="object-cover object-[center_30%] md:object-center"
               sizes="100vw"
             />
+
             {s.overlay !== "none" && (
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
             )}
