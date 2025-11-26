@@ -1,3 +1,4 @@
+// app/media/[id]/page.tsx
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,9 +8,10 @@ import VideoPlayer from "@/components/media/VideoPlayer";
 export default async function MediaDetail({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = params;
+  // ✅ Next expects params as a Promise in your generated types, so we align with that
+  const { id } = await params;
 
   const item = await getMediaById(id);
   if (!item) return notFound();
@@ -46,24 +48,23 @@ export default async function MediaDetail({
       </div>
 
       {/* Main Content */}
-      <section className="py-2 lg:py-6">
-        <div className="container mx-auto px-0 lg:px-4">
-          <div className="max-w-7xl mx-auto">
+      <section className="py-8 lg:py-12">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
             {/* Media Display */}
-            <div className="mb-10 lg:mb-14">
+            <div className="mb-8 lg:mb-12">
               {isVideo ? (
-                <div className="relative rounded-none lg:rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl">
-                  <div className="relative w-full h-[60vh] sm:h-[70vh] lg:h-[80vh]">
-                    <VideoPlayer
-                      src={(item as any).url}
-                      poster={(item as any).posterUrl}
-                      autoPlay={true}
-                    />
-                  </div>
+                <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black shadow-2xl">
+                  <VideoPlayer
+                    src={(item as any).url}
+                    poster={(item as any).posterUrl}
+                    autoPlay={true}
+                  />
                 </div>
               ) : (
-                <div className="relative rounded-none lg:rounded-3xl overflow-hidden border border-white/10 bg-slate-800 shadow-2xl">
-                  <div className="relative w-full h-[60vh] sm:h-[70vh] lg:h-[80vh]">
+                <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-slate-800 shadow-2xl">
+                  {/* 🔥 Bigger, viewport-based height so it feels like a full media view */}
+                  <div className="relative h-[52vh] sm:h-[58vh] lg:h-[70vh] min-h-[280px]">
                     <Image
                       src={(item as any).url}
                       alt={(item as any).title}
@@ -79,47 +80,33 @@ export default async function MediaDetail({
 
             {/* Media Information */}
             <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
-              {/* Primary Info */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <span className="px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
-                    {isVideo ? "Match Highlights" : "Gallery Spotlight"}
-                  </span>
-                  <span className="text-xs font-medium text-white/60 border border-white/10 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur">
-                    {(item as any).type?.toUpperCase() || "MEDIA"}
-                  </span>
-                  {(item as any).category && (
-                    <span className="text-xs font-medium text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full bg-emerald-500/10">
-                      {(item as any).category}
+              <div className="lg:col-span-2">
+                <header className="mb-6">
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        isVideo
+                          ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                          : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                      }`}
+                    >
+                      {isVideo ? "VIDEO" : "PHOTO"}
                     </span>
-                  )}
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-white/60">
-                    {(item as any).match && (
-                      <span className="inline-flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                        <span className="font-semibold text-white/80">
-                          {(item as any).match.homeTeam}{" "}
-                          <span className="text-emerald-300">vs</span>{" "}
-                          {(item as any).match.awayTeam}
-                        </span>
+                    {(item as any).category && (
+                      <span className="px-3 py-1 rounded-full bg-brand-gold/15 text-brand-gold border border-brand-gold/30 text-sm font-semibold">
+                        {(item as any).category}
                       </span>
                     )}
                     {(item as any).createdAt && (
-                      <span className="inline-flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
-                        <span>
-                          {new Date((item as any).createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )}
-                        </span>
+                      <span className="text-white/60 text-sm">
+                        {new Date((item as any).createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )}
                       </span>
                     )}
                   </div>
@@ -133,106 +120,148 @@ export default async function MediaDetail({
                       {(item as any).description}
                     </p>
                   )}
+                </header>
 
-                  <div className="flex flex-wrap items-center gap-4">
-                    <Link
-                      href="/media"
-                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-900 text-sm font-semibold shadow-lg shadow-white/20 hover:bg-slate-100 transition-all transform hover:scale-105"
-                    >
-                      ← Back to Media Hub
-                    </Link>
-
-                    {isVideo && (item as any).match && (
-                      <Link
-                        href={`/matches/${(item as any).match.slug || ""}`}
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-white/20 text-sm font-semibold text-white hover:bg-white/10 transition-all"
-                      >
-                        View Match Details
-                      </Link>
+                {/* Extra Details */}
+                {(item as any).location ||
+                (item as any).match ||
+                (item as any).season ? (
+                  <div className="grid sm:grid-cols-2 gap-4 mb-8">
+                    {(item as any).match && (
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <h3 className="text-sm font-semibold text-white/70 mb-1">
+                          Match
+                        </h3>
+                        <p className="text-white">{(item as any).match}</p>
+                      </div>
                     )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-6">
-                <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-5">
-                  <h2 className="text-sm font-semibold text-white/80 uppercase tracking-[0.18em] mb-4">
-                    Media Info
-                  </h2>
-                  <dl className="space-y-3 text-sm text-white/70">
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-white/50">Type</dt>
-                      <dd className="font-medium uppercase">
-                        {(item as any).type || "N/A"}
-                      </dd>
-                    </div>
                     {(item as any).season && (
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-white/50">Season</dt>
-                        <dd className="font-medium">{(item as any).season}</dd>
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <h3 className="text-sm font-semibold text-white/70 mb-1">
+                          Season
+                        </h3>
+                        <p className="text-white">{(item as any).season}</p>
                       </div>
                     )}
                     {(item as any).location && (
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-white/50">Location</dt>
-                        <dd className="font-medium">
-                          {(item as any).location}
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <h3 className="text-sm font-semibold text-white/70 mb-1">
+                          Location
+                        </h3>
+                        <p className="text-white">{(item as any).location}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
+                {/* Tags */}
+                {(item as any).tags && (item as any).tags.length > 0 ? (
+                  <div className="mb-10">
+                    <h3 className="text-sm font-semibold text-white/70 mb-2">
+                      Tags
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {(item as any).tags.map((t: string) => (
+                        <span
+                          key={t}
+                          className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/80 text-sm hover:bg-white/10 transition-colors"
+                        >
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Sidebar: Meta Info */}
+              <aside className="space-y-6">
+                <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
+                  <h3 className="text-sm font-semibold text-white/70 mb-3">
+                    Media Details
+                  </h3>
+                  <dl className="space-y-2 text-sm text-white/80">
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-white/60">Type</dt>
+                      <dd>{isVideo ? "Video" : "Photo"}</dd>
+                    </div>
+                    {(item as any).category && (
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-white/60">Category</dt>
+                        <dd>{(item as any).category}</dd>
+                      </div>
+                    )}
+                    {(item as any).createdAt && (
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-white/60">Date</dt>
+                        <dd>
+                          {new Date((item as any).createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
                         </dd>
                       </div>
                     )}
-                    {(item as any).duration && (
-                      <div className="flex justify-between gap-3">
-                        <dt className="text-white/50">Duration</dt>
-                        <dd className="font-medium">
-                          {(item as any).duration} mins
-                        </dd>
+                    {(item as any).photographer && (
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-white/60">
+                          {isVideo ? "Director" : "Photographer"}
+                        </dt>
+                        <dd>{(item as any).photographer}</dd>
                       </div>
                     )}
                   </dl>
                 </div>
 
-                <div className="rounded-2xl border border-amber-400/20 bg-amber-500/5 backdrop-blur-xl p-5">
-                  <h2 className="text-sm font-semibold text-amber-300 uppercase tracking-[0.18em] mb-3">
-                    Media & Press
-                  </h2>
-                  <p className="text-sm text-amber-100/80 mb-3">
-                    {isVideo
-                      ? "This video is available for media use. Contact us for licensing."
-                      : "High-resolution version available for press and media use."}
+                {/* Share / CTA */}
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-brand-gold/20 to-brand-blue/20 border border-brand-gold/40">
+                  <h3 className="text-sm font-semibold text-black/80 mb-2">
+                    Share the Moment
+                  </h3>
+                  <p className="text-xs text-black/70 mb-4">
+                    Let others experience the Primus FC story. Share this media
+                    with your friends and fellow supporters.
                   </p>
-                  <a
-                    href="/contact"
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-amber-400 text-slate-950 text-sm font-semibold hover:bg-amber-300 transition-all transform hover:scale-105"
-                  >
-                    Request Media Access
-                  </a>
+                  <div className="flex flex-wrap gap-2">
+                    <button className="px-3 py-1.5 rounded-full bg-black text-white text-xs font-semibold hover:bg-gray-900 transition">
+                      Copy Link
+                    </button>
+                    <button className="px-3 py-1.5 rounded-full bg-white/90 text-black text-xs font-semibold hover:bg-white transition">
+                      Share
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </aside>
             </div>
           </div>
         </div>
       </section>
 
       {/* Related Media */}
-      {related.length > 0 && (
-        <section className="py-12 lg:py-16 bg-slate-900/50">
+      {related && related.length > 0 && (
+        <section className="pb-16">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl lg:text-3xl font-black text-white">
-                  Related{" "}
-                  <span className="bg-gradient-to-r from-brand-gold to-yellow-400 bg-clip-text text-transparent">
-                    Content
-                  </span>
-                </h2>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-black text-white">
+                    Related Media
+                  </h2>
+                  <p className="text-white/60 text-sm">
+                    More visuals from the same category and story.
+                  </p>
+                </div>
                 <Link
                   href="/media"
-                  className="group inline-flex items-center text-brand-gold hover:text-yellow-400 transition-colors font-semibold"
+                  className="hidden sm:inline-flex items-center text-brand-gold hover:text-yellow-400 text-sm font-semibold"
                 >
                   View All
                   <svg
-                    className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
+                    className="w-4 h-4 ml-1"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -247,61 +276,53 @@ export default async function MediaDetail({
                 </Link>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                 {related.map((m: any) => {
-                  const thumb =
-                    m.type === "video" ? m.posterUrl || m.url : m.url;
-                  const isRelatedVideo = m.type === "video";
-
+                  const rIsVideo = m.type === "video";
                   return (
                     <Link
                       key={m.id}
                       href={`/media/${m.id}`}
-                      className="group block transform hover:scale-105 transition-all duration-500"
+                      className="group block rounded-2xl overflow-hidden border border-white/10 bg-slate-900 hover:border-brand-gold/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-brand-gold/20"
                     >
-                      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 group-hover:border-brand-gold/50 transition-all duration-500 shadow-lg hover:shadow-xl hover:shadow-brand-gold/20">
+                      <div className="relative aspect-video">
                         <Image
-                          src={thumb}
+                          src={rIsVideo ? m.posterUrl || m.url : m.url}
                           alt={m.title}
                           fill
-                          sizes="(max-width: 768px) 50vw, 25vw"
-                          className="object-cover transition-transform duration-700 group-hover:scale-110"
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          sizes="(min-width: 768px) 33vw, 50vw"
                         />
-
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                        {isRelatedVideo && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute top-2 left-2 flex gap-2">
+                          <span className="px-2 py-1 rounded-full bg-black/70 text-white/80 text-[10px] font-semibold">
+                            {rIsVideo ? "VIDEO" : "PHOTO"}
+                          </span>
+                          {m.category && (
+                            <span className="px-2 py-1 rounded-full bg-white/10 text-white/80 text-[10px] font-semibold">
+                              {m.category}
+                            </span>
+                          )}
+                        </div>
+                        {rIsVideo && (
                           <div className="absolute inset-0 grid place-items-center">
-                            <div className="w-10 h-10 rounded-full bg-brand-gold/90 grid place-items-center transform group-hover:scale-110 transition-transform">
+                            <div className="w-9 h-9 rounded-full bg-brand-gold/90 grid place-items-center shadow-xl transform group-hover:scale-110 transition-transform">
                               <svg
-                                width="20"
-                                height="20"
+                                width="16"
+                                height="16"
                                 viewBox="0 0 24 24"
-                                fill="white"
-                                className="ml-1"
+                                fill="black"
+                                className="ml-0.5"
                               >
                                 <path d="M8 5v14l11-7z" />
                               </svg>
                             </div>
                           </div>
                         )}
-
-                        <div className="absolute bottom-0 left-0 right-0 p-3 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                          <div className="bg-black/80 rounded-lg p-2 backdrop-blur-sm">
-                            <h3 className="font-semibold text-white text-xs line-clamp-2 mb-1">
-                              {m.title}
-                            </h3>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-brand-gold">
-                                {m.category}
-                              </span>
-                              <span
-                                className={`w-2 h-2 rounded-full ${
-                                  isRelatedVideo ? "bg-red-500" : "bg-blue-500"
-                                }`}
-                              ></span>
-                            </div>
-                          </div>
+                        <div className="absolute bottom-2 left-2 right-2">
+                          <p className="text-xs font-semibold text-white line-clamp-2 bg-black/70 rounded-lg px-2 py-1">
+                            {m.title}
+                          </p>
                         </div>
                       </div>
                     </Link>
