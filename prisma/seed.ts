@@ -7,6 +7,7 @@ import { media } from "../data/media";
 import { articles } from "../data/news";
 import { products } from "../data/products";
 import { matches } from "../data/matches";
+import { staff } from "../data/staff"; // 👈 you were missing this
 
 const prisma = new PrismaClient();
 
@@ -14,8 +15,8 @@ async function main() {
   console.log("🌱 Seeding Primus FC database...");
 
   // ⚠️ FIRST TIME ONLY (safe if DB is empty).
-  // After you start editing things in the Admin, DO NOT run this in prod again
-  // with these deleteMany() calls, or you'll wipe your live data.
+  // Once you start editing content in PROD via admin, do NOT run this with
+  // deleteMany() against the live DB again or it will wipe your changes.
   console.log("🧹 Clearing existing data...");
   await prisma.playerImage.deleteMany();
   await prisma.productImage.deleteMany();
@@ -24,6 +25,7 @@ async function main() {
   await prisma.article.deleteMany();
   await prisma.product.deleteMany();
   await prisma.player.deleteMany();
+  await prisma.staff.deleteMany(); // 👈 clear staff too
 
   // 1. Players + PlayerImage (photos)
   console.log("👟 Seeding players...");
@@ -67,7 +69,6 @@ async function main() {
         category: m.category ?? null,
         description: m.description ?? null,
         tags: m.tags ?? [],
-        // createdAt is DateTime in Prisma; your data has ISO string
         createdAt: m.createdAt ? new Date(m.createdAt) : undefined,
       },
     });
@@ -133,6 +134,21 @@ async function main() {
         homeScore: m.homeScore ?? 0,
         awayScore: m.awayScore ?? 0,
         report: m.report ?? null,
+      },
+    });
+  }
+
+  // 6. Staff 👈 NEW
+  console.log("👔 Seeding staff...");
+  for (const s of staff) {
+    await prisma.staff.create({
+      data: {
+        id: s.id, // overrides default(cuid()), which is fine
+        name: s.name,
+        role: s.role,
+        area: s.area ?? null,
+        bio: s.bio ?? null,
+        photoUrl: s.photoUrl ?? null,
       },
     });
   }
