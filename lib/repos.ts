@@ -101,6 +101,10 @@ export async function getRecentMatch() {
 }
 
 export async function getStaff() {
-  // For now we use static data only
-  return staff;
+  if (useDev) return staff; // use data/staff.ts in dev mode for convenience
+
+  const { prisma } = await import("@/lib/prisma");
+  return prisma.staff.findMany({
+    orderBy: [{ area: "asc" }, { name: "asc" }],
+  });
 }

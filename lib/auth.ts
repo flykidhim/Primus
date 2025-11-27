@@ -9,7 +9,8 @@ const ADMIN_COOKIE = "primus_admin";
 const ADMIN_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 const SECRET = process.env.ADMIN_COOKIE_SECRET || "dev-admin-secret";
 
-// --- tiny signed token ---
+// --- tiny signed token helpers ---
+
 function b64url(buf: Buffer) {
   return buf
     .toString("base64")
@@ -17,6 +18,7 @@ function b64url(buf: Buffer) {
     .replace(/\//g, "_")
     .replace(/=+$/g, "");
 }
+
 function sign(payload: object) {
   const json = JSON.stringify(payload);
   const body = b64url(Buffer.from(json));
@@ -24,12 +26,15 @@ function sign(payload: object) {
   const sig = b64url(mac);
   return `${body}.${sig}`;
 }
+
 function verify(token: string): false | Record<string, unknown> {
   const [body, sig] = token.split(".");
   if (!body || !sig) return false;
+
   const mac = crypto.createHmac("sha256", SECRET).update(body).digest();
   const expect = b64url(mac);
   if (expect !== sig) return false;
+
   try {
     const parsed = JSON.parse(
       Buffer.from(
@@ -37,6 +42,7 @@ function verify(token: string): false | Record<string, unknown> {
         "base64"
       ).toString("utf8")
     );
+
     if (parsed && typeof parsed === "object") {
       if (
         "exp" in parsed &&
@@ -62,7 +68,9 @@ export async function isAdminRequest(req: Request): Promise<boolean> {
     .split(";")
     .map((s) => s.trim())
     .find((s) => s.startsWith(ADMIN_COOKIE + "="));
+
   if (!match) return false;
+
   const token = decodeURIComponent(match.split("=").slice(1).join("="));
   return !!verify(token);
 }
@@ -83,19 +91,25 @@ export function withAdminCookie(res: NextResponse): NextResponse {
     iat: now,
     exp: now + ADMIN_COOKIE_MAX_AGE,
   });
+
   res.cookies.set(ADMIN_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: true,
+    // ✅ In dev on localhost we don't want `secure: true` or the cookie won't be sent
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: ADMIN_COOKIE_MAX_AGE,
   });
+
   return res;
 }
 
 /** Clear admin cookie on a NextResponse and return the same response. */
 export function clearAdminCookieOn(res: NextResponse): NextResponse {
-  res.cookies.set(ADMIN_COOKIE, "", { path: "/", maxAge: 0 });
+  res.cookies.set(ADMIN_COOKIE, "", {
+    path: "/",
+    maxAge: 0,
+  });
   return res;
 }
 
@@ -107,12 +121,26 @@ export async function isAdminFromServerContext(): Promise<boolean> {
   return !!verify(token);
 }
 
-/** Password check helper for login route. */
+/**
+ * Password check helper for login route.
+ *
+ * Supports both:
+ *  - ADMIN_PASSWORD_BCRYPT=PLAINTEXT:admin123      (dev convenience)
+ *  - ADMIN_PASSWORD_BCRYPT=$2b$10$...bcryptHash   (real bcrypt in prod)
+ */
 export async function checkAdminPassword(plain: string): Promise<boolean> {
-  const hash = process.env.ADMIN_PASSWORD_BCRYPT || "";
-  if (!hash) return false;
+  const raw = process.env.ADMIN_PASSWORD_BCRYPT || "";
+  if (!raw) return false;
+
+  // ✅ Dev-friendly mode: allow PLAINTEXT:<password> format
+  if (raw.startsWith("PLAINTEXT:")) {
+    const expected = raw.slice("PLAINTEXT:".length);
+    return plain === expected;
+  }
+
+  // ✅ Normal mode: treat as bcrypt hash
   try {
-    return await bcrypt.compare(plain, hash);
+    return await bcrypt.compare(plain, raw);
   } catch {
     return false;
   }

@@ -132,6 +132,18 @@ model Media {
   @@index([category, createdAt])
 }
 
+model Staff {
+  id       String   @id @default(cuid())
+  name     String
+  role     String
+  area     String?    // "Leadership" | "Coaching" | "Technical" | "Medical" | "Operations"
+  bio      String?
+  photoUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
 model Standing {
   id        String   @id @default(cuid())
   team      String

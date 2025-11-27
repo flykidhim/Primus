@@ -1,381 +1,148 @@
+// prisma/seed.ts
 import { PrismaClient } from "@prisma/client";
+
+// Import your TypeScript data files
+import { players } from "../data/players";
+import { media } from "../data/media";
+import { articles } from "../data/news";
+import { products } from "../data/products";
+import { matches } from "../data/matches";
+
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.$transaction([
-    prisma.media.deleteMany(),
-    prisma.product.deleteMany(),
-    prisma.article.deleteMany(),
-    prisma.match.deleteMany(),
-    prisma.player.deleteMany(),
-    prisma.standing.deleteMany(),
-  ]);
+  console.log("🌱 Seeding Primus FC database...");
 
-  await prisma.user.upsert({
-    where: { email: "admin@primusfc.local" },
-    update: {},
-    create: {
-      email: "admin@primusfc.local",
-      password: "$2b$10$X9y7b1yT8VdN2oTgE9JXn.PVq2mWm8f3i5Q9fM4uXnq8dI2q7z0wa",
-      name: "Site Admin",
-      role: "ADMIN",
-    },
-  });
+  // ⚠️ FIRST TIME ONLY (safe if DB is empty).
+  // After you start editing things in the Admin, DO NOT run this in prod again
+  // with these deleteMany() calls, or you'll wipe your live data.
+  console.log("🧹 Clearing existing data...");
+  await prisma.playerImage.deleteMany();
+  await prisma.productImage.deleteMany();
+  await prisma.match.deleteMany();
+  await prisma.media.deleteMany();
+  await prisma.article.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.player.deleteMany();
 
-  // Local player images
-  const P = (i: number) => `/media/players/player-${i}.jpg`;
-  await prisma.player.createMany({
-    data: [
-      {
-        name: "Kwame Asare",
-        position: "GK",
-        number: 1,
-        nationality: "GHA",
-        heightCm: 190,
-        bio: "Commanding shot-stopper.",
-        photoUrl: P(1),
-        appearances: 26,
-        goals: 0,
-        assists: 0,
+  // 1. Players + PlayerImage (photos)
+  console.log("👟 Seeding players...");
+  for (const p of players) {
+    await prisma.player.create({
+      data: {
+        id: p.id,
+        name: p.name,
+        position: p.position,
+        number: p.number,
+        nationality: p.nationality ?? null,
+        heightCm: p.heightCm ?? null,
+        bio: p.bio ?? null,
+        photoUrl: p.photoUrl ?? null,
+        appearances: p.appearances ?? 0,
+        goals: p.goals ?? 0,
+        assists: p.assists ?? 0,
+        photos: p.photos
+          ? {
+              create: p.photos.map((ph, idx) => ({
+                url: ph.url,
+                alt: ph.alt ?? null,
+                sort: ph.sort ?? idx,
+              })),
+            }
+          : undefined,
       },
-      {
-        name: "Samuel Boateng",
-        position: "DF",
-        number: 2,
-        nationality: "GHA",
-        heightCm: 188,
-        bio: "Aerially dominant CB.",
-        photoUrl: P(2),
-        appearances: 30,
-        goals: 2,
-        assists: 1,
-      },
-      {
-        name: "Peter Mensah",
-        position: "DF",
-        number: 3,
-        nationality: "GHA",
-        heightCm: 183,
-        bio: "Aggressive tackler.",
-        photoUrl: P(3),
-        appearances: 29,
-        goals: 1,
-        assists: 2,
-      },
-      {
-        name: "Kofi Asamoah",
-        position: "DF",
-        number: 4,
-        nationality: "GHA",
-        heightCm: 184,
-        bio: "Ball-playing CB.",
-        photoUrl: P(4),
-        appearances: 27,
-        goals: 1,
-        assists: 3,
-      },
-      {
-        name: "Kojo Owusu",
-        position: "MF",
-        number: 6,
-        nationality: "GHA",
-        heightCm: 178,
-        bio: "Ball-winner.",
-        photoUrl: P(5),
-        appearances: 28,
-        goals: 1,
-        assists: 4,
-      },
-      {
-        name: "Luis Romero",
-        position: "MF",
-        number: 8,
-        nationality: "ESP",
-        heightCm: 176,
-        bio: "Creative playmaker.",
-        photoUrl: P(6),
-        appearances: 31,
-        goals: 7,
-        assists: 11,
-      },
-      {
-        name: "John Mensah",
-        position: "FW",
-        number: 9,
-        nationality: "GHA",
-        heightCm: 182,
-        bio: "Prolific striker.",
-        photoUrl: P(7),
-        appearances: 25,
-        goals: 16,
-        assists: 4,
-      },
-      {
-        name: "Seth Amponsah",
-        position: "MF",
-        number: 10,
-        nationality: "GHA",
-        heightCm: 175,
-        bio: "Attacking mid.",
-        photoUrl: P(8),
-        appearances: 24,
-        goals: 6,
-        assists: 8,
-      },
-      {
-        name: "Yao Mensimah",
-        position: "FW",
-        number: 11,
-        nationality: "GHA",
-        heightCm: 184,
-        bio: "Clinical finisher.",
-        photoUrl: P(9),
-        appearances: 22,
-        goals: 9,
-        assists: 3,
-      },
-      {
-        name: "Felix Donkor",
-        position: "DF",
-        number: 12,
-        nationality: "GHA",
-        heightCm: 180,
-        bio: "Pacey fullback.",
-        photoUrl: P(10),
-        appearances: 27,
-        goals: 0,
-        assists: 5,
-      },
-      {
-        name: "Richard Appiah",
-        position: "GK",
-        number: 13,
-        nationality: "GHA",
-        heightCm: 192,
-        bio: "Lightning reflexes.",
-        photoUrl: P(11),
-        appearances: 8,
-        goals: 0,
-        assists: 0,
-      },
-      {
-        name: "Eric Owusu",
-        position: "MF",
-        number: 14,
-        nationality: "GHA",
-        heightCm: 180,
-        bio: "Box-to-box engine.",
-        photoUrl: P(12),
-        appearances: 26,
-        goals: 3,
-        assists: 7,
-      },
-      {
-        name: "Suleiman Tijani",
-        position: "MF",
-        number: 17,
-        nationality: "GHA",
-        heightCm: 179,
-        bio: "Set-piece specialist.",
-        photoUrl: P(13),
-        appearances: 19,
-        goals: 4,
-        assists: 6,
-      },
-      {
-        name: "Daniel Kusi",
-        position: "FW",
-        number: 7,
-        nationality: "GHA",
-        heightCm: 177,
-        bio: "1v1 wide forward.",
-        photoUrl: P(14),
-        appearances: 20,
-        goals: 5,
-        assists: 5,
-      },
-    ],
-  });
+    });
+  }
 
-  const now = new Date();
-  const d = (days: number) => new Date(now.getTime() + days * 86400000);
-  await prisma.match.createMany({
-    data: [
-      {
-        date: d(3),
-        competition: "Premier League",
-        home: "Primus FC",
-        away: "Rival FC",
-        venue: "Primus Arena",
-        status: "SCHEDULED",
+  // 2. Media
+  console.log("📸 Seeding media...");
+  for (const m of media) {
+    await prisma.media.create({
+      data: {
+        id: m.id,
+        title: m.title,
+        type: m.type, // "photo" | "video"
+        url: m.url,
+        posterUrl: m.posterUrl ?? null,
+        category: m.category ?? null,
+        description: m.description ?? null,
+        tags: m.tags ?? [],
+        // createdAt is DateTime in Prisma; your data has ISO string
+        createdAt: m.createdAt ? new Date(m.createdAt) : undefined,
       },
-      {
-        date: d(-4),
-        competition: "Premier League",
-        home: "Primus FC",
-        away: "City United",
-        venue: "Primus Arena",
-        status: "FT",
-        homeScore: 3,
-        awayScore: 1,
-        report: "Dominant press and clinical finishing.",
-      },
-      {
-        date: d(10),
-        competition: "Cup",
-        home: "Primus FC",
-        away: "Lions",
-        venue: "Primus Arena",
-        status: "SCHEDULED",
-      },
-      {
-        date: d(-12),
-        competition: "Premier League",
-        home: "Eagles",
-        away: "Primus FC",
-        venue: "Eagles Arena",
-        status: "FT",
-        homeScore: 0,
-        awayScore: 2,
-        report: "Compact block, swift counters.",
-      },
-    ],
-  });
+    });
+  }
 
-  await prisma.article.createMany({
-    data: [
-      {
-        title: "Welcome to Primus FC",
-        slug: "welcome-to-primus-fc",
-        excerpt: "Official site is live.",
-        content:
-          "<p>We’re delighted to launch our new home for Primus FC fans.</p>",
-        coverUrl: "/brand/hero.jpg",
+  // 3. Articles / News
+  console.log("📰 Seeding articles...");
+  for (const a of articles) {
+    await prisma.article.create({
+      data: {
+        id: a.id,
+        title: a.title,
+        slug: a.slug,
+        excerpt: a.excerpt ?? null,
+        content: a.content,
+        coverUrl: a.coverUrl ?? null,
+        category: a.category ?? "Club News",
+        published: a.published ?? true,
+        createdAt: a.createdAt ? new Date(a.createdAt) : undefined,
       },
-      {
-        title: "New Signing Announced",
-        slug: "new-signing-announced",
-        excerpt: "A forward joins Primus FC.",
-        content: "<p>Full article body here...</p>",
-        coverUrl: "/media/gallery/gallery-1.jpg",
-      },
-      {
-        title: "Match Report: 3-1 Win",
-        slug: "match-report-3-1-win",
-        excerpt: "Convincing home victory.",
-        content: "<p>Detailed report...</p>",
-        coverUrl: "/media/gallery/gallery-2.jpg",
-      },
-    ],
-  });
+    });
+  }
 
-  await prisma.product.createMany({
-    data: [
-      {
-        name: "Home Kit 24/25",
-        slug: "home-kit-24-25",
-        priceCents: 6999,
-        imageUrl: "/media/products/product-1.jpg",
-        description: "Official home jersey.",
-        stock: 120,
+  // 4. Products + ProductImage
+  console.log("🛒 Seeding products...");
+  for (const p of products) {
+    await prisma.product.create({
+      data: {
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        priceCents: p.priceCents,
+        imageUrl: p.imageUrl ?? null,
+        description: p.description ?? null,
+        stock: p.stock ?? 0,
+        badge: p.badge ?? null,
+        category: p.category ?? null,
+        images: p.images
+          ? {
+              create: p.images.map((img, idx) => ({
+                url: img.url,
+                alt: img.alt ?? null,
+                sort: img.sort ?? idx,
+              })),
+            }
+          : undefined,
       },
-      {
-        name: "Away Kit 24/25",
-        slug: "away-kit-24-25",
-        priceCents: 6999,
-        imageUrl: "/media/products/product-2.jpg",
-        description: "Official away jersey.",
-        stock: 100,
-      },
-      {
-        name: "Third Kit 24/25",
-        slug: "third-kit-24-25",
-        priceCents: 6999,
-        imageUrl: "/media/products/product-3.jpg",
-        description: "Third kit special.",
-        stock: 80,
-      },
-      {
-        name: "Scarf",
-        slug: "scarf",
-        priceCents: 1999,
-        imageUrl: "/media/products/product-4.jpg",
-        description: "Warm and stylish.",
-        stock: 300,
-      },
-      {
-        name: "Cap",
-        slug: "cap",
-        priceCents: 1599,
-        imageUrl: "/media/products/product-5.jpg",
-        description: "Embroidered crest.",
-        stock: 200,
-      },
-      {
-        name: "Training Top",
-        slug: "training-top",
-        priceCents: 3999,
-        imageUrl: "/media/products/product-6.jpg",
-        description: "Comfort fit.",
-        stock: 150,
-      },
-    ],
-  });
+    });
+  }
 
-  await prisma.media.createMany({
-    data: [
-      {
-        title: "Goal Celebration",
-        type: "photo",
-        url: "/media/gallery/gallery-1.jpg",
+  // 5. Matches
+  console.log("📅 Seeding matches...");
+  for (const m of matches) {
+    await prisma.match.create({
+      data: {
+        id: m.id,
+        date: new Date(m.date),
+        competition: m.competition,
+        home: m.home,
+        away: m.away,
+        venue: m.venue ?? null,
+        status: m.status,
+        homeScore: m.homeScore ?? 0,
+        awayScore: m.awayScore ?? 0,
+        report: m.report ?? null,
       },
-      {
-        title: "Training Session",
-        type: "photo",
-        url: "/media/gallery/gallery-2.jpg",
-      },
-      {
-        title: "Fans at Home",
-        type: "photo",
-        url: "/media/gallery/gallery-3.jpg",
-      },
-      {
-        title: "Warm-up Drills",
-        type: "photo",
-        url: "/media/gallery/gallery-4.jpg",
-      },
-    ],
-  });
+    });
+  }
 
-  const table = [
-    ["United Town", 30, 20, 6, 4, 61, 28],
-    ["Primus FC", 30, 19, 6, 5, 58, 30],
-    ["Rival FC", 30, 18, 5, 7, 54, 33],
-    ["City United", 30, 16, 8, 6, 49, 31],
-    ["Harbor FC", 30, 13, 9, 8, 41, 36],
-  ];
-  await prisma.standing.createMany({
-    data: table.map((t, i) => ({
-      team: t[0] as string,
-      played: t[1] as number,
-      won: t[2] as number,
-      drawn: t[3] as number,
-      lost: t[4] as number,
-      gf: t[5] as number,
-      ga: t[6] as number,
-      gd: (t[5] as number) - (t[6] as number),
-      points: (t[2] as number) * 3 + (t[3] as number),
-      position: i + 1,
-      season: "2025/26",
-    })),
-  });
-
-  console.log("Primus FC seed complete.");
+  console.log("✅ Seeding complete.");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Seed failed", e);
     process.exit(1);
   })
   .finally(async () => {
